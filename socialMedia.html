@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Hub - AI Enquiry System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+            justify-content: center;
+            max-width: 500px;
+            margin: 0 2rem;
+        }
+
+        .search-box {
+            display: flex;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.8rem 1.2rem;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            transform: scale(1.05);
+        }
+
+        .voice-search-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 0.8rem;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+        }
+
+        .voice-search-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .voice-search-btn.recording {
+            background: #ef4444;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .search-results-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .search-results-modal {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        .large-modal {
+            max-width: 1000px;
+            max-height: 90vh;
+        }
+
+        .search-results-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 3rem;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 2rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .platform-status {
+            text-align: left;
+            max-width: 300px;
+            margin: 2rem auto;
+        }
+
+        .platform-item {
+            padding: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status {
+            color: #fbbf24;
+        }
+
+        .results-summary {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 15px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            color: white;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #fbbf24;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .platform-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            font-weight: 600;
+        }
+
+        .platform-results {
+            position: relative;
+        }
+
+        .platform-comments {
+            display: none;
+        }
+
+        .platform-comments.active {
+            display: block;
+        }
+
+        .comment-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .comment-item.positive {
+            border-left-color: #10b981;
+        }
+
+        .comment-item.negative {
+            border-left-color: #ef4444;
+        }
+
+        .comment-item.neutral {
+            border-left-color: #f59e0b;
+        }
+
+        .comment-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .platform-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.2rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .comment-date {
+            opacity: 0.6;
+            font-size: 0.8rem;
+        }
+
+        .comment-text {
+            color: white;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .comment-stats {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .comment-stats .stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 0.8rem;
+            border-radius: 10px;
+        }
+
+        .sentiment-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .sentiment-badge.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .sentiment-badge.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .sentiment-badge.neutral {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .view-post {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: auto;
+        }
+
+        .view-post:hover {
+            color: #764ba2;
+        }
+
+        .search-results-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-results-header h3 {
+            margin: 0;
+            color: white;
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .search-results-content {
+            padding: 1.5rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-result-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .result-platform {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+            color: #fbbf24;
+            font-weight: 500;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: white;
+        }
+
+        .result-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            color: white;
+        }
+
+        .result-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .result-stats span {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 0.8rem;
+            border-radius: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .social-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .social-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .social-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--brand-color);
+        }
+
+        .facebook { --brand-color: #1877f2; }
+        .twitter { --brand-color: #1da1f2; }
+        .linkedin { --brand-color: #0077b5; }
+        .instagram { --brand-color: #e4405f; }
+        .whatsapp { --brand-color: #25d366; }
+        .telegram { --brand-color: #0088cc; }
+
+        .social-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-icon {
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--brand-color);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .social-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .social-info p {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .social-stats {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .social-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 10px;
+            background: var(--brand-color);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .analytics-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 2rem;
+        }
+
+        .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #fbbf24;
+        }
+
+        .metric-label {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .recent-activity {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 2rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-time {
+            opacity: 0.6;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .social-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📱 Social Media Hub</h1>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="Search for products (e.g., iPhone 15, MacBook Pro, Tesla Model 3)..." id="socialSearchInput">
+                <button class="search-btn" onclick="performSocialSearch()">
+                    🔍 Search
+                </button>
+            </div>
+            <button class="voice-search-btn" onclick="startVoiceSearch()" id="voiceSearchBtn" title="Voice Search">
+                🎤
+            </button>
+        </div>
+        
+        <a href="dashBord.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <div class="container">
+        <div class="social-grid">
+            <!-- Facebook Card -->
+            <div class="social-card facebook">
+                <div class="social-header">
+                    <div class="social-icon">📘</div>
+                    <div class="social-info">
+                        <h3>Facebook</h3>
+                        <p>Business Page</p>
+                    </div>
+                </div>
+                <div class="social-stats">
+                    <div class="stat">
+                        <span class="stat-number">2.3k</span>
+                        <span class="stat-label">Followers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">156</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.2%</span>
+                        <span class="stat-label">Engagement</span>
+                    </div>
+                </div>
+                <div class="social-actions">
+                    <button class="action-btn" onclick="shareToFacebook()">Share</button>
+                    <button class="action-btn secondary" onclick="openFacebookPage()">View Page</button>
+                </div>
+            </div>
+
+            <!-- Twitter Card -->
+            <div class="social-card twitter">
+                <div class="social-header">
+                    <div class="social-icon">🐦</div>
+                    <div class="social-info">
+                        <h3>Twitter</h3>
+                        <p>@ai_enquiry_system</p>
+                    </div>
+                </div>
+                <div class="social-stats">
+                    <div class="stat">
+                        <span class="stat-number">1.8k</span>
+                        <span class="stat-label">Followers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">89</span>
+                        <span class="stat-label">Tweets</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">3.7%</span>
+                        <span class="stat-label">Engagement</span>
+                    </div>
+                </div>
+                <div class="social-actions">
+                    <button class="action-btn" onclick="shareToTwitter()">Tweet</button>
+                    <button class="action-btn secondary" onclick="openTwitterProfile()">View Profile</button>
+                </div>
+            </div>
+
+            <!-- LinkedIn Card -->
+            <div class="social-card linkedin">
+                <div class="social-header">
+                    <div class="social-icon">💼</div>
+                    <div class="social-info">
+                        <h3>LinkedIn</h3>
+                        <p>Company Page</p>
+                    </div>
+                </div>
+                <div class="social-stats">
+                    <div class="stat">
+                        <span class="stat-number">945</span>
+                        <span class="stat-label">Connections</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">34</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">5.1%</span>
+                        <span class="stat-label">Engagement</span>
+                    </div>
+                </div>
+                <div class="social-actions">
+                    <button class="action-btn" onclick="shareToLinkedIn()">Share</button>
+                    <button class="action-btn secondary" onclick="openLinkedInPage()">View Page</button>
+                </div>
+            </div>
+
+            <!-- Instagram Card -->
+            <div class="social-card instagram">
+                <div class="social-header">
+                    <div class="social-icon">📷</div>
+                    <div class="social-info">
+                        <h3>Instagram</h3>
+                        <p>@ai_enquiry_sys</p>
+                    </div>
+                </div>
+                <div class="social-stats">
+                    <div class="stat">
+                        <span class="stat-number">3.1k</span>
+                        <span class="stat-label">Followers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">127</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">6.8%</span>
+                        <span class="stat-label">Engagement</span>
+                    </div>
+                </div>
+                <div class="social-actions">
+                    <button class="action-btn" onclick="openInstagram()">View Profile</button>
+                    <button class="action-btn secondary" onclick="schedulePost()">Schedule Post</button>
+                </div>
+            </div>
+
+            <!-- WhatsApp Card -->
+            <div class="social-card whatsapp">
+                <div class="social-header">
+                    <div class="social-icon">📱</div>
+                    <div class="social-info">
+                        <h3>WhatsApp</h3>
+                        <p>Business Account</p>
+                    </div>
+                </div>
+                <div class="social-stats">
+                    <div class="stat">
+                        <span class="stat-number">567</span>
+                        <span class="stat-label">Contacts</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">234</span>
+                        <span class="stat-label">Messages</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-label">Read Rate</span>
+                    </div>
+                </div>
+                <div class="social-actions">
+                    <button class="action-btn" onclick="shareToWhatsApp()">Share</button>
+                    <button class="action-btn secondary" onclick="broadcastMessage()">Broadcast</button>
+                </div>
+            </div>
+
+            <!-- Telegram Card -->
+            <div class="social-card telegram">
+                <div class="social-header">
+                    <div class="social-icon">✈️</div>
+                    <div class="social-info">
+                        <h3>Telegram</h3>
+                        <p>@ai_enquiry_channel</p>
+                    </div>
+                </div>
+                <div class="social-stats">
+                    <div class="stat">
+                        <span class="stat-number">892</span>
+                        <span class="stat-label">Subscribers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">45</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">7.2%</span>
+                        <span class="stat-label">Engagement</span>
+                    </div>
+                </div>
+                <div class="social-actions">
+                    <button class="action-btn" onclick="shareToTelegram()">Share</button>
+                    <button class="action-btn secondary" onclick="openTelegramChannel()">View Channel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div class="analytics-section">
+            <div class="analytics-header">
+                <h2>📊 Social Media Analytics</h2>
+                <button class="back-btn" onclick="refreshAnalytics()">🔄 Refresh</button>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">9.7k</div>
+                    <div class="metric-label">Total Reach</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">542</div>
+                    <div class="metric-label">Total Shares</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">5.3%</div>
+                    <div class="metric-label">Avg Engagement</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">234</div>
+                    <div class="metric-label">New Followers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="recent-activity">
+            <h3>🔔 Recent Activity</h3>
+            <div class="activity-item">
+                <div class="activity-icon">📘</div>
+                <div class="activity-content">
+                    <div>Dashboard shared on Facebook</div>
+                    <div class="activity-time">2 minutes ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">🐦</div>
+                <div class="activity-content">
+                    <div>New tweet about AI features posted</div>
+                    <div class="activity-time">15 minutes ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">💼</div>
+                <div class="activity-content">
+                    <div>LinkedIn article about e-commerce trends</div>
+                    <div class="activity-time">1 hour ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">📱</div>
+                <div class="activity-content">
+                    <div>WhatsApp broadcast sent to customers</div>
+                    <div class="activity-time">3 hours ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Social Media Functions
+        function shareToFacebook() {
+            const url = encodeURIComponent(window.location.origin + '/dashBord.html');
+            const text = encodeURIComponent('🚀 Check out our AI Product Enquiry Dashboard! Advanced analytics for e-commerce inquiries with real-time insights.');
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank', 'width=600,height=400');
+            updateActivity('Dashboard shared on Facebook', '📘');
+        }
+
+        // Search Functions
+        function performSocialSearch() {
+            const searchInput = document.getElementById('socialSearchInput');
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                alert('📝 Please enter a search term!');
+                return;
+            }
+
+            // Show loading state
+            showLoadingResults(query);
+            
+            // Perform actual web scraping
+            scrapeSocialMediaPlatforms(query);
+            updateActivity(`Searching social media for "${query}"`, '🔍');
+        }
+
+        function showLoadingResults(query) {
+            const loadingHTML = `
+                <div class="search-results-overlay" onclick="closeSearchResults()">
+                    <div class="search-results-modal" onclick="event.stopPropagation()">
+                        <div class="search-results-header">
+                            <h3>🔍 Searching for "${query}"</h3>
+                            <button onclick="closeSearchResults()" class="close-btn">✕</button>
+                        </div>
+                        <div class="search-results-content">
+                            <div class="loading-container">
+                                <div class="loading-spinner"></div>
+                                <p>🌐 Scraping social media platforms...</p>
+                                <div class="platform-status">
+                                    <div class="platform-item">� Twitter - <span class="status">Searching...</span></div>
+                                    <div class="platform-item">� Reddit - <span class="status">Searching...</span></div>
+                                    <div class="platform-item">� YouTube - <span class="status">Searching...</span></div>
+                                    <div class="platform-item">� Amazon - <span class="status">Searching...</span></div>
+                                    <div class="platform-item">� Google Reviews - <span class="status">Searching...</span></div>
+                                    <div class="platform-item">� Facebook - <span class="status">Searching...</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', loadingHTML);
+        }
+
+        async function scrapeSocialMediaPlatforms(query) {
+            try {
+            // Send request to backend for web scraping
+            const response = await fetch('/api/scrape-social-media', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    query: query,
+                    platforms: ['twitter', 'reddit', 'youtube', 'amazon', 'google', 'facebook']
+                })
+            });                if (response.ok) {
+                    const results = await response.json();
+                    displayScrapedResults(query, results);
+                } else {
+                    // Fallback to simulated results if backend is not available
+                    console.log('Backend not available, using simulated results');
+                    setTimeout(() => {
+                        const simulatedResults = generateSimulatedSocialResults(query);
+                        displayScrapedResults(query, simulatedResults);
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Error scraping social media:', error);
+                // Fallback to simulated results
+                setTimeout(() => {
+                    const simulatedResults = generateSimulatedSocialResults(query);
+                    displayScrapedResults(query, simulatedResults);
+                }, 3000);
+            }
+        }
+
+        function generateSimulatedSocialResults(query) {
+            const platforms = [
+                { name: 'Facebook', icon: '📘', baseUrl: 'facebook.com' },
+                { name: 'Twitter', icon: '🐦', baseUrl: 'twitter.com' },
+                { name: 'Instagram', icon: '📷', baseUrl: 'instagram.com' },
+                { name: 'LinkedIn', icon: '💼', baseUrl: 'linkedin.com' },
+                { name: 'YouTube', icon: '📺', baseUrl: 'youtube.com' },
+                { name: 'Pinterest', icon: '📌', baseUrl: 'pinterest.com' }
+            ];
+
+            const comments = [
+                `Just bought the ${query} and it's amazing! Highly recommend it 👍`,
+                `The ${query} has great features but the price is a bit high 💰`,
+                `Been using ${query} for a month now, quality is outstanding! ⭐⭐⭐⭐⭐`,
+                `Comparing ${query} with other options, this one stands out 🏆`,
+                `${query} delivery was super fast, very satisfied with the purchase 🚚`,
+                `The ${query} exceeded my expectations, worth every penny 💯`,
+                `Customer service for ${query} was excellent when I had questions 📞`,
+                `${query} has some minor issues but overall good value for money 👌`,
+                `Would definitely buy ${query} again, great investment! 💪`,
+                `The ${query} design is sleek and modern, love it! ✨`
+            ];
+
+            const results = {
+                query: query,
+                totalResults: 0,
+                platforms: {}
+            };
+
+            platforms.forEach(platform => {
+                const numComments = Math.floor(Math.random() * 5) + 3; // 3-7 comments per platform
+                const platformComments = [];
+
+                for (let i = 0; i < numComments; i++) {
+                    const randomComment = comments[Math.floor(Math.random() * comments.length)];
+                    platformComments.push({
+                        id: `${platform.name.toLowerCase()}_${i + 1}`,
+                        text: randomComment,
+                        author: `@user${Math.floor(Math.random() * 1000)}`,
+                        likes: Math.floor(Math.random() * 500) + 10,
+                        shares: Math.floor(Math.random() * 100) + 5,
+                        timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+                        sentiment: Math.random() > 0.3 ? 'positive' : Math.random() > 0.5 ? 'neutral' : 'negative',
+                        url: `https://${platform.baseUrl}/post/${Math.random().toString(36).substr(2, 9)}`
+                    });
+                }
+
+                results.platforms[platform.name.toLowerCase()] = {
+                    platform: platform.name,
+                    icon: platform.icon,
+                    comments: platformComments,
+                    totalFound: platformComments.length
+                };
+
+                results.totalResults += platformComments.length;
+            });
+
+            return results;
+        }
+
+        function displayScrapedResults(query, results) {
+            // Close loading modal
+            closeSearchResults();
+
+            const resultsHTML = `
+                <div class="search-results-overlay" onclick="closeSearchResults()">
+                    <div class="search-results-modal large-modal" onclick="event.stopPropagation()">
+                        <div class="search-results-header">
+                            <h3>🔍 Social Media Results for "${query}" (${results.totalResults} comments found)</h3>
+                            <div class="header-actions">
+                                <button onclick="exportResults('${query}')" class="action-btn">📊 Export</button>
+                                <button onclick="closeSearchResults()" class="close-btn">✕</button>
+                            </div>
+                        </div>
+                        <div class="search-results-content">
+                            <div class="results-summary">
+                                <div class="summary-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-number">${results.totalResults}</span>
+                                        <span class="stat-label">Total Comments</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number">${Object.keys(results.platforms).length}</span>
+                                        <span class="stat-label">Platforms</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number">${calculatePositiveSentiment(results)}%</span>
+                                        <span class="stat-label">Positive</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="platform-tabs">
+                                ${Object.keys(results.platforms).map((platformKey, index) => {
+                                    const platform = results.platforms[platformKey];
+                                    return `
+                                        <button class="tab-btn ${index === 0 ? 'active' : ''}" 
+                                                onclick="showPlatformComments('${platformKey}')">
+                                            ${platform.icon} ${platform.platform} (${platform.totalFound})
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+
+                            <div class="platform-results">
+                                ${Object.keys(results.platforms).map((platformKey, index) => {
+                                    const platform = results.platforms[platformKey];
+                                    return `
+                                        <div class="platform-comments ${index === 0 ? 'active' : ''}" id="comments-${platformKey}">
+                                            ${platform.comments.map(comment => `
+                                                <div class="comment-item ${comment.sentiment}">
+                                                    <div class="comment-header">
+                                                        <div class="comment-author">
+                                                            <strong>${comment.author}</strong>
+                                                            <span class="platform-badge">${platform.icon} ${platform.platform}</span>
+                                                        </div>
+                                                        <div class="comment-date">${comment.timestamp}</div>
+                                                    </div>
+                                                    <div class="comment-text">${comment.text}</div>
+                                                    <div class="comment-stats">
+                                                        <span class="stat">👍 ${comment.likes}</span>
+                                                        <span class="stat">🔄 ${comment.shares}</span>
+                                                        <span class="sentiment-badge ${comment.sentiment}">${getSentimentEmoji(comment.sentiment)}</span>
+                                                        <a href="${comment.url}" target="_blank" class="view-post">🔗 View Post</a>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', resultsHTML);
+            updateActivity(`Found ${results.totalResults} comments about "${query}"`, '📊');
+        }
+
+        function calculatePositiveSentiment(results) {
+            let totalComments = 0;
+            let positiveComments = 0;
+
+            Object.values(results.platforms).forEach(platform => {
+                platform.comments.forEach(comment => {
+                    totalComments++;
+                    if (comment.sentiment === 'positive') {
+                        positiveComments++;
+                    }
+                });
+            });
+
+            return totalComments > 0 ? Math.round((positiveComments / totalComments) * 100) : 0;
+        }
+
+        function getSentimentEmoji(sentiment) {
+            switch (sentiment) {
+                case 'positive': return '😊 Positive';
+                case 'negative': return '😞 Negative';
+                default: return '😐 Neutral';
+            }
+        }
+
+        function showPlatformComments(platformKey) {
+            // Hide all platform comments
+            document.querySelectorAll('.platform-comments').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show selected platform comments
+            document.getElementById(`comments-${platformKey}`).classList.add('active');
+            
+            // Activate selected tab
+            event.target.classList.add('active');
+        }
+
+        function exportResults(query) {
+            alert(`📊 Exporting search results for "${query}" - Feature coming soon!`);
+        }
+
+        function closeSearchResults() {
+            const overlay = document.querySelector('.search-results-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        function startVoiceSearch() {
+            const voiceBtn = document.getElementById('voiceSearchBtn');
+            const searchInput = document.getElementById('socialSearchInput');
+            
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                voiceBtn.classList.add('recording');
+                voiceBtn.innerHTML = '🔴';
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    searchInput.value = transcript;
+                    performSocialSearch();
+                };
+                
+                recognition.onend = function() {
+                    voiceBtn.classList.remove('recording');
+                    voiceBtn.innerHTML = '🎤';
+                };
+                
+                recognition.onerror = function(event) {
+                    voiceBtn.classList.remove('recording');
+                    voiceBtn.innerHTML = '🎤';
+                    alert('🎤 Voice search error: ' + event.error);
+                };
+                
+                recognition.start();
+                updateActivity('Voice search started', '🎤');
+            } else {
+                alert('🎤 Voice search not supported in this browser');
+            }
+        }
+
+        // Add Enter key support for search
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('socialSearchInput');
+            searchInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    performSocialSearch();
+                }
+            });
+        });
+
+        function shareToTwitter() {
+            const url = encodeURIComponent(window.location.origin + '/dashBord.html');
+            const text = encodeURIComponent('🚀 AI Product Enquiry Dashboard - Smart analytics for e-commerce! #AI #Dashboard #Analytics #TechInnovation #Ecommerce');
+            window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=600,height=400');
+            updateActivity('Dashboard tweeted on Twitter', '🐦');
+        }
+
+        function shareToLinkedIn() {
+            const url = encodeURIComponent(window.location.origin + '/dashBord.html');
+            const title = encodeURIComponent('AI Product Enquiry Dashboard');
+            const summary = encodeURIComponent('Advanced AI-powered dashboard for managing e-commerce product inquiries with real-time analytics and business insights.');
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&title=${title}&summary=${summary}`, '_blank', 'width=600,height=400');
+            updateActivity('Professional post shared on LinkedIn', '💼');
+        }
+
+        function openInstagram() {
+            alert('📷 Follow us on Instagram @ai_enquiry_sys for updates and behind-the-scenes content!');
+            window.open('https://www.instagram.com/', '_blank');
+            updateActivity('Instagram profile promoted', '📷');
+        }
+
+        function shareToWhatsApp() {
+            const text = encodeURIComponent('🚀 Check out our AI Product Enquiry Dashboard! Smart analytics for e-commerce inquiries: ' + window.location.origin + '/dashBord.html');
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+            updateActivity('Dashboard shared via WhatsApp', '📱');
+        }
+
+        function shareToTelegram() {
+            const url = encodeURIComponent(window.location.origin + '/dashBord.html');
+            const text = encodeURIComponent('🚀 AI Product Enquiry Dashboard - Smart e-commerce analytics and insights!');
+            window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+            updateActivity('Content shared on Telegram', '✈️');
+        }
+
+        function openFacebookPage() {
+            window.open('https://www.facebook.com/', '_blank');
+        }
+
+        function openTwitterProfile() {
+            window.open('https://twitter.com/', '_blank');
+        }
+
+        function openLinkedInPage() {
+            window.open('https://www.linkedin.com/', '_blank');
+        }
+
+        function openTelegramChannel() {
+            window.open('https://t.me/', '_blank');
+        }
+
+        function schedulePost() {
+            alert('📅 Post scheduling feature will be available soon!');
+        }
+
+        function broadcastMessage() {
+            alert('📢 WhatsApp broadcast feature coming soon!');
+        }
+
+        function refreshAnalytics() {
+            // Simulate analytics refresh
+            const metrics = document.querySelectorAll('.metric-value');
+            metrics.forEach(metric => {
+                const current = parseFloat(metric.textContent.replace(/[^\d.]/g, ''));
+                const change = (Math.random() - 0.5) * 0.1;
+                const newValue = current * (1 + change);
+                
+                if (metric.textContent.includes('k')) {
+                    metric.textContent = newValue.toFixed(1) + 'k';
+                } else if (metric.textContent.includes('%')) {
+                    metric.textContent = newValue.toFixed(1) + '%';
+                } else {
+                    metric.textContent = Math.round(newValue);
+                }
+            });
+            
+            updateActivity('Analytics refreshed', '📊');
+        }
+
+        function updateActivity(message, icon) {
+            const activityContainer = document.querySelector('.recent-activity');
+            const newActivity = document.createElement('div');
+            newActivity.className = 'activity-item';
+            newActivity.innerHTML = `
+                <div class="activity-icon">${icon}</div>
+                <div class="activity-content">
+                    <div>${message}</div>
+                    <div class="activity-time">Just now</div>
+                </div>
+            `;
+            
+            // Add to top of activity list
+            const firstActivity = activityContainer.querySelector('.activity-item');
+            if (firstActivity) {
+                activityContainer.insertBefore(newActivity, firstActivity);
+            }
+            
+            // Remove oldest activity if more than 5
+            const activities = activityContainer.querySelectorAll('.activity-item');
+            if (activities.length > 5) {
+                activities[activities.length - 1].remove();
+            }
+            
+            // Animate new activity
+            newActivity.style.opacity = '0';
+            newActivity.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                newActivity.style.transition = 'all 0.3s ease';
+                newActivity.style.opacity = '1';
+                newActivity.style.transform = 'translateY(0)';
+            }, 100);
+        }
+
+        // Simulate real-time updates
+        setInterval(() => {
+            if (Math.random() > 0.95) {
+                const activities = [
+                    'New follower on Instagram',
+                    'Comment received on LinkedIn post',
+                    'WhatsApp message from customer',
+                    'Telegram channel subscriber joined',
+                    'Facebook page liked',
+                    'Tweet retweeted'
+                ];
+                const icons = ['📷', '💼', '📱', '✈️', '📘', '🐦'];
+                const randomIndex = Math.floor(Math.random() * activities.length);
+                updateActivity(activities[randomIndex], icons[randomIndex]);
+            }
+        }, 15000);
+    </script>
+</body>
+</html>
