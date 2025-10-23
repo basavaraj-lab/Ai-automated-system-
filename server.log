@@ -1,0 +1,48 @@
+🚀 Server running on http://localhost:5001
+📡 API endpoint: http://localhost:5001/api/search
+🔍 Searching for: "test"
+✅ Generated 2 results for "test"
+❌ Search error: TypeError: query.trim is not a function
+    at /Users/basavarajurk/Documents/Ai automated responce system/server.js:20:25
+    at Layer.handleRequest (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/layer.js:152:17)
+    at /Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:295:15
+    at processParams (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:582:12)
+    at next (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:291:5)
+    at serveStatic (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/serve-static/index.js:74:16)
+❌ Search error: TypeError: query.trim is not a function
+    at /Users/basavarajurk/Documents/Ai automated responce system/server.js:20:25
+    at Layer.handleRequest (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/layer.js:152:17)
+    at /Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:295:15
+    at processParams (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:582:12)
+    at next (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:291:5)
+    at serveStatic (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/serve-static/index.js:74:16)
+❌ Search error: TypeError: query.trim is not a function
+    at /Users/basavarajurk/Documents/Ai automated responce system/server.js:20:25
+    at Layer.handleRequest (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/layer.js:152:17)
+    at /Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:295:15
+    at processParams (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:582:12)
+    at next (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:291:5)
+    at serveStatic (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/serve-static/index.js:74:16)
+❌ Search error: TypeError: query.trim is not a function
+    at /Users/basavarajurk/Documents/Ai automated responce system/server.js:20:25
+    at Layer.handleRequest (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/layer.js:152:17)
+    at next (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/route.js:117:3)
+    at handle (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/lib/layer.js:152:17)
+    at /Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:295:15
+    at processParams (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:582:12)
+    at next (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/router/index.js:291:5)
+    at serveStatic (/Users/basavarajurk/Documents/Ai automated responce system/node_modules/serve-static/index.js:74:16)

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Enquiry Analytics Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 22%;
+    }
+    .card h2 {
+      margin: 10px 0;
+      color: #007bff;
+    }
+    .chart-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 30px auto;
+      width: 90%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 AI Enquiry Analytics Dashboard</h1>
+
+  <div class="stats">
+    <div class="card">
+      <h3>Total Enquiries</h3>
+      <h2 id="enquiries">0</h2>
+    </div>
+    <div class="card">
+      <h3>Total Responses</h3>
+      <h2 id="responses">0</h2>
+    </div>
+    <div class="card">
+      <h3>Total Conversions</h3>
+      <h2 id="conversions">0</h2>
+    </div>
+    <div class="card">
+      <h3>Conversion Rate</h3>
+      <h2 id="conversionRate">0%</h2>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="analyticsChart"></canvas>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:5001/api/analytics";
+
+    async function fetchAnalytics() {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+
+      document.getElementById("enquiries").textContent = data.totalEnquiries;
+      document.getElementById("responses").textContent = data.totalResponses;
+      document.getElementById("conversions").textContent = data.totalConversions;
+      document.getElementById("conversionRate").textContent = `${data.conversionRate}%`;
+
+      renderChart(data.history);
+    }
+
+    function renderChart(history) {
+      const labels = history.map(item => new Date(item.time).toLocaleTimeString());
+      const enquiryCount = history.filter(h => h.type === 'enquiry').length;
+      const responseCount = history.filter(h => h.type === 'response').length;
+      const conversionCount = history.filter(h => h.type === 'conversion').length;
+
+      const ctx = document.getElementById('analyticsChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Enquiries', 'Responses', 'Conversions'],
+          datasets: [{
+            label: 'Count',
+            data: [enquiryCount, responseCount, conversionCount],
+            backgroundColor: ['#007bff', '#28a745', '#ffc107']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Enquiries vs Responses vs Conversions' }
+          }
+        }
+      });
+    }
+
+    fetchAnalytics();
+    setInterval(fetchAnalytics, 5001); // auto-refresh every 5 seconds
+  </script>
+</body>
+</html>

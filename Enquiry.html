@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Enquiries</title>
+<style>
+  body { font-family: "Poppins", sans-serif; background: #f4f6fa; padding: 20px; margin: 0; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  #backBtn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background: #0077ff;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  #searchContainer { margin-left: auto; }
+  #searchInput { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; width: 200px; }
+  #searchBtn { padding: 6px 12px; border-radius: 6px; border: none; background: #0077ff; color: #fff; cursor: pointer; margin-left: 5px; }
+
+  .card { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 10px; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
+  .status { padding: 4px 10px; border-radius: 20px; font-weight: 600; display: inline-block; }
+  .status.new { background: #e0f2fe; color: #0077ff; }
+  .status.resolved { background: #dcfce7; color: #16a34a; }
+  .status.escalated { background: #fee2e2; color: #dc2626; }
+
+  #detailsPanel { margin-top: 20px; background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="backBtn">⬅ Back</button>
+  <div id="searchContainer">
+    <input type="text" id="searchInput" placeholder="Search by product, brand, or channel">
+    <button id="searchBtn">Search</button>
+  </div>
+</header>
+
+<div id="enquiryList">
+  <div style="text-align: center; padding: 40px; color: #666;">
+    <h3>🔍 Search for Products</h3>
+    <p>Enter a product name in the search box above to find enquiries.</p>
+    <p style="font-size: 0.9em; margin-top: 15px;">
+      Try searching for: <strong>Product</strong>, <strong>Phone</strong>, or <strong>Laptop</strong>
+    </p>
+  </div>
+</div>
+
+<div id="detailsPanel">
+  <h2>Enquiry Details</h2>
+  <div id="detailsContent">
+    <div style="text-align: center; padding: 20px; color: #666;">
+      <p>📄 Select an enquiry from the search results to view details</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const enquiryListDiv = document.getElementById('enquiryList');
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const backBtn = document.getElementById('backBtn');
+const detailsContent = document.getElementById('detailsContent');
+
+let currentResults = [];
+let isSearchActive = false;
+
+// Check server status on page load
+async function checkServerStatus() {
+  try {
+    const response = await fetch('http://localhost:5001/api/health');
+    const data = await response.json();
+    console.log('✅ Server status:', data);
+    return true;
+  } catch (error) {
+    console.error('❌ Server not reachable:', error);
+    enquiryListDiv.innerHTML = `
+      <div style="color: red; padding: 20px; background: #fee2e2; border-radius: 8px; text-align: center;">
+        <h3>🚨 Server Connection Error</h3>
+        <p>Cannot connect to the server at localhost:5001</p>
+        <p>Please make sure the server is running:</p>
+        <code style="background: #f3f4f6; padding: 5px; border-radius: 4px;">node server.js</code>
+      </div>
+    `;
+    return false;
+  }
+}
+
+// Check server status when page loads
+window.addEventListener('DOMContentLoaded', checkServerStatus);
+
+async function searchEnquiries(customQuery = null) {
+  const query = customQuery || searchInput.value.trim();
+  if (!query) return alert("Please enter a product name to search.");
+
+  enquiryListDiv.innerHTML = `
+    <div style="text-align: center; padding: 30px; color: #0077ff;">
+      <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #e3f2fd; border-top: 4px solid #0077ff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      <p style="margin-top: 15px; font-weight: 600;">🔍 Searching for live product data...</p>
+      <p style="font-size: 0.9em; color: #666;">Fetching current prices from multiple retailers</p>
+    </div>
+    <style>
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+  `;
+  
+  detailsContent.innerHTML = `
+    <div style="text-align: center; padding: 20px; color: #666;">
+      <p>⏳ Preparing live product details...</p>
+    </div>
+  `;
+
+  try {
+    console.log(`Making request to search for: ${query}`);
+    
+    const response = await fetch('http://localhost:5001/api/search', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ query })
+    });
+
+    console.log(`Response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Server error response:`, errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    if (!data || !Array.isArray(data)) {
+      throw new Error('Invalid data format received from server');
+    }
+
+    currentResults = data;
+    isSearchActive = true;
+    renderList(data);
+  } catch (err) {
+    enquiryListDiv.innerHTML = `
+      <div style="color: red; padding: 15px; background: #fee2e2; border-radius: 8px;">
+        <p>❌ Error: ${err.message || 'Failed to fetch data'}</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">
+          Please ensure that:
+          <br>1. The server is running on port 5001
+          <br>2. Your internet connection is stable
+          <br>3. Try refreshing the page
+        </p>
+      </div>`;
+    console.error('Search error:', err);
+  }
+}
+
+function renderList(list) {
+  enquiryListDiv.innerHTML = "";
+  if (!list || list.length === 0) {
+    enquiryListDiv.innerHTML = `
+      <div style="text-align: center; padding: 30px; color: #666;">
+        <p>❌ No results found for your search.</p>
+        <p style="font-size: 0.9em;">Try searching for products like "iPhone", "laptop", or "headphones"</p>
+      </div>`;
+    return;
+  }
+
+  // Add search results header
+  enquiryListDiv.innerHTML = `
+    <div style="background: #e3f2fd; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #0077ff;">
+      <p style="margin: 0; font-weight: 600; color: #0077ff;">🔍 Found ${list.length} live results</p>
+      <p style="margin: 5px 0 0 0; font-size: 0.85em; color: #666;">Updated: ${new Date().toLocaleTimeString()}</p>
+    </div>
+  `;
+
+  list.forEach((item, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.transition = "transform 0.2s ease, box-shadow 0.2s ease";
+    card.addEventListener("mouseenter", () => {
+      card.style.transform = "translateY(-2px)";
+      card.style.boxShadow = "0 6px 12px rgba(0,0,0,0.1)";
+    });
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "translateY(0)";
+      card.style.boxShadow = "0 3px 8px rgba(0,0,0,0.05)";
+    });
+    
+    card.innerHTML = `
+      <div style="border-left: 4px solid #0077ff; padding-left: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+          <p style="margin: 0; flex: 1;"><strong>${item.title}</strong></p>
+          ${item.availability ? `<span style="background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600;">${item.availability}</span>` : ''}
+        </div>
+        <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9em;">
+          🏪 ${item.platform} • 💰 ${item.price}
+          ${item.rating ? ` • ⭐ ${item.rating}` : ''}
+        </p>
+        ${item.description ? `<p style="margin: 0; color: #888; font-size: 0.85em;">${item.description.substring(0, 80)}...</p>` : ''}
+        <div style="margin-top: 8px;">
+          <span style="background: #f0f9ff; color: #0284c7; padding: 1px 6px; border-radius: 8px; font-size: 0.75em;">🔄 Live Data</span>
+        </div>
+      </div>
+    `;
+    card.addEventListener("click", () => showDetails(item));
+    enquiryListDiv.appendChild(card);
+  });
+}
+
+function showDetails(item) {
+  detailsContent.innerHTML = `
+    <div style="padding: 15px;">
+      <div style="display: flex; align-items: center; margin-bottom: 20px;">
+        <h3 style="color: #0077ff; margin: 0; flex: 1;">${item.title}</h3>
+        <span style="background: #dcfce7; color: #16a34a; padding: 4px 12px; border-radius: 16px; font-size: 0.85em; font-weight: 600;">🔄 Live Data</span>
+      </div>
+      
+      <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #dee2e6;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+          <div>
+            <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9em;">Platform</p>
+            <p style="margin: 0; font-weight: 600;">🏪 ${item.platform}</p>
+          </div>
+          <div>
+            <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9em;">Current Price</p>
+            <p style="margin: 0; font-weight: 600; color: #16a34a; font-size: 1.1em;">💰 ${item.price}</p>
+          </div>
+        </div>
+        
+        ${item.availability ? `
+          <div style="margin-bottom: 15px;">
+            <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9em;">Availability</p>
+            <p style="margin: 0; font-weight: 600;">📦 ${item.availability}</p>
+          </div>
+        ` : ''}
+        
+        ${item.rating ? `
+          <div style="margin-bottom: 15px;">
+            <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9em;">Rating</p>
+            <p style="margin: 0; font-weight: 600;">⭐ ${item.rating}</p>
+          </div>
+        ` : ''}
+        
+        ${item.description ? `
+          <div>
+            <p style="margin: 0 0 5px 0; color: #666; font-size: 0.9em;">Description</p>
+            <p style="margin: 0; line-height: 1.5;">📝 ${item.description}</p>
+          </div>
+        ` : ''}
+      </div>
+      
+      <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+        <p style="margin: 0; font-size: 0.9em; color: #856404;">
+          ⚡ <strong>Live Information:</strong> This data is fetched in real-time from multiple retailers. 
+          Prices and availability may change frequently.
+        </p>
+      </div>
+      
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button onclick="respondToEnquiry('${item.title}')" style="background: #16a34a; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;">✅ Send Response</button>
+        <button onclick="markAsResolved('${item.title}')" style="background: #0077ff; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;">✓ Mark Resolved</button>
+        ${item.url ? `<button onclick="openProductPage('${item.url}')" style="background: #6366f1; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;">🔗 View Product</button>` : ''}
+        <button onclick="refreshProductData('${item.title}')" style="background: #f59e0b; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;">🔄 Refresh Data</button>
+      </div>
+      
+      <div style="margin-top: 15px; font-size: 0.85em; color: #666; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+        <p style="margin: 0;">Last updated: ${new Date().toLocaleString()}</p>
+      </div>
+    </div>
+  `;
+}
+
+function respondToEnquiry(title) {
+  const response = prompt(`Enter your response for "${title}":`);
+  if (response) {
+    alert(`✅ Response sent: "${response}"`);
+    // Here you would typically send the response to your backend
+    console.log('Response sent:', { title, response, timestamp: new Date() });
+  }
+}
+
+function markAsResolved(title) {
+  if (confirm(`Mark "${title}" as resolved?`)) {
+    alert(`✓ "${title}" has been marked as resolved`);
+    // Here you would typically update the status in your backend
+    console.log('Marked as resolved:', { title, timestamp: new Date() });
+  }
+}
+
+function openProductPage(url) {
+  if (url) {
+    window.open(url, '_blank');
+  } else {
+    alert('Product link not available');
+  }
+}
+
+async function refreshProductData(title) {
+  const refreshBtn = event.target;
+  const originalText = refreshBtn.textContent;
+  refreshBtn.textContent = '🔄 Refreshing...';
+  refreshBtn.disabled = true;
+  
+  try {
+    // Re-search for the specific product to get updated data
+    const query = title.split(' - ')[0]; // Extract product name
+    await searchEnquiries(query);
+    alert('✅ Product data refreshed successfully!');
+  } catch (error) {
+    alert('❌ Failed to refresh data. Please try again.');
+  } finally {
+    refreshBtn.textContent = originalText;
+    refreshBtn.disabled = false;
+  }
+}
+
+// Back button logic
+backBtn.addEventListener('click', () => {
+  if (isSearchActive) {
+    searchInput.value = '';
+    isSearchActive = false;
+    enquiryListDiv.innerHTML = '<p>Search a product to view enquiries.</p>';
+    detailsContent.innerHTML = 'Select an enquiry to view details';
+  } else {
+    window.location.href = 'dashboard.html';
+  }
+});
+
+searchBtn.addEventListener('click', searchEnquiries);
+searchInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') searchEnquiries(); });
+</script>
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Enquiry System</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: Arial; padding: 20px; background: #f4f6fa; }
+  header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+  button { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+  #backBtn { background: #0077ff; color: #fff; }
+  #searchBtn { background: #0077ff; color: #fff; margin-left: 5px; }
+  #enquiryList .card { background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; }
+  #detailsPanel { margin-top: 20px; padding: 10px; background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="backBtn">⬅ Back</button>
+  <div>
+    <input type="text" id="searchInput" placeholder="Search products...">
+    <button id="searchBtn">Search</button>
+  </div>
+</header>
+
+<h2>Enquiries</h2>
+<div id="enquiryList"></div>
+
+<h2>Enquiry Details</h2>
+<div id="detailsPanel">Select an enquiry to see details</div>
+
+<h2>Analytics</h2>
+<canvas id="analyticsChart" height="100"></canvas>
+<canvas id="platformChart" height="100"></canvas>
+
+<script>
+const enquiryListDiv = document.getElementById('enquiryList');
+const detailsPanel = document.getElementById('detailsPanel');
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const backBtn = document.getElementById('backBtn');
+
+let enquiries = [];
+let filteredEnquiries = [];
+
+// Fetch analytics data
+async function fetchAnalytics() {
+  const res = await fetch('http://localhost:5001/api/analytics');
+  const data = await res.json();
+
+  // Bar chart for overall metrics
+  new Chart(document.getElementById('analyticsChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Enquiries','Responses','Clicks','Conversions'],
+      datasets:[{
+        label:'Metrics',
+        data:[data.enquiries,data.responses,data.clicks,data.conversions],
+        backgroundColor:['#0077ff','#16a34a','#f59e0b','#dc2626']
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}} }
+  });
+
+  // Pie chart for platform distribution
+  const platforms = Object.keys(data.platformStats);
+  const counts = Object.values(data.platformStats);
+  new Chart(document.getElementById('platformChart'), {
+    type:'pie',
+    data:{
+      labels: platforms,
+      datasets:[{ data: counts, backgroundColor:['#0077ff','#16a34a','#f59e0b','#dc2626'] }]
+    }
+  });
+}
+
+// Fetch enquiries from backend
+async function fetchEnquiries(query='') {
+  enquiryListDiv.innerHTML = 'Fetching details...';
+  try {
+    const res = await fetch('http://localhost:5001/api/search', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ query })
+    });
+    enquiries = await res.json();
+    filteredEnquiries = [...enquiries];
+    renderEnquiries();
+    fetchAnalytics();
+  } catch(err){
+    enquiryListDiv.innerHTML = '❌ Error fetching data.';
+    console.error(err);
+  }
+}
+
+// Render enquiry list
+function renderEnquiries() {
+  enquiryListDiv.innerHTML = '';
+  filteredEnquiries.forEach((e,i)=>{
+    const div = document.createElement('div');
+    div.className='card';
+    div.innerHTML = `<strong>${e.product}</strong> (${e.platform}) - ${e.price}`;
+    div.onclick = ()=>showDetails(i);
+    enquiryListDiv.appendChild(div);
+  });
+}
+
+// Show details
+function showDetails(idx) {
+  const e = filteredEnquiries[idx];
+  detailsPanel.innerHTML = `
+    <p><strong>Product:</strong> ${e.product}</p>
+    <p><strong>Platform:</strong> ${e.platform}</p>
+    <p><strong>Price:</strong> ${e.price}</p>
+    <button onclick="logAction('response')">Send Response</button>
+    <button onclick="logAction('conversion')">Mark Conversion</button>
+  `;
+  logAction('click');
+}
+
+// Log analytics action
+async function logAction(type){
+  await fetch('http://localhost:5001/api/log',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ type })
+  });
+  fetchAnalytics();
+}
+
+// Search
+searchBtn.onclick = ()=>fetchEnquiries(searchInput.value);
+searchInput.addEventListener('keyup', (e)=>{ if(e.key==='Enter') fetchEnquiries(searchInput.value); });
+
+// Back button
+backBtn.onclick = ()=>{ window.location.href='dashboard.html'; };
+
+// Initial fetch
+fetchEnquiries();
+</script>
+
+</body>
+</html> -->

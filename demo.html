@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Enquiry Manager - Dashboard</title>
+  <style>
+    :root {
+      --primary: #0b63d6;
+      --bg: #f6f9fc;
+      --card: #fff;
+      --text: #111827;
+      --muted: #6b7280;
+      --success: #16a34a;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 15px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar h2 {
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .nav-item {
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 5px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      background: #e9f2ff;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .main {
+      flex: 1;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+    }
+
+    .channel {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status.resolved {
+      background: #e7f9ef;
+      color: var(--success);
+    }
+
+    .status.escalated {
+      background: #ffe8e5;
+      color: var(--danger);
+    }
+
+    .status.new {
+      background: #e9f2ff;
+      color: var(--primary);
+    }
+
+    .details-panel {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .details-panel h3 {
+      margin-top: 0;
+      color: var(--primary);
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      width: 400px;
+      max-width: 90%;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI Enquiry Manager</h1>
+    <div>🔍 Smart Detection System</div>
+  </header>
+
+  <div class="container">
+    <div class="sidebar">
+      <h2>Menu</h2>
+      <div class="nav-item active">Dashboard</div>
+      <div class="nav-item">Enquiries</div>
+      <div class="nav-item">Analytics</div>
+      <div class="nav-item">Settings</div>
+    </div>
+
+    <div class="main">
+      <h2>Customer Enquiries</h2>
+      <div class="cards" id="enquiryCards"></div>
+    </div>
+
+    <div class="details-panel" id="detailsPanel">
+      <h3>Enquiry Details</h3>
+      <div id="detailsContent">Select an enquiry to view details</div>
+    </div>
+  </div>
+
+  <!-- Escalation Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <h3>Escalate to Human</h3>
+      <p id="modalText"></p>
+      <textarea id="notes" rows="3" placeholder="Add escalation note..."></textarea><br />
+      <div style="text-align:right;margin-top:10px;">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmEscalation()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const enquiries = [
+      {
+        id: 1,
+        channel: "Twitter",
+        message: "What is the price of the XYZ laptop?",
+        product: "XYZ Laptop",
+        confidence: 0.92,
+        aiReply: "The XYZ laptop costs $999 and is available now.",
+        status: "new",
+      },
+      {
+        id: 2,
+        channel: "Facebook",
+        message: "I forgot my password, can you reset it?",
+        product: "Account Help",
+        confidence: 0.75,
+        aiReply: "Please click 'Forgot Password' to reset your credentials.",
+        status: "new",
+      },
+      {
+        id: 3,
+        channel: "Instagram",
+        message: "Is the ABC smartwatch waterproof?",
+        product: "ABC Smartwatch",
+        confidence: 0.68,
+        aiReply: null,
+        status: "escalated",
+      },
+    ];
+
+    const cardsContainer = document.getElementById("enquiryCards");
+    const detailsPanel = document.getElementById("detailsPanel");
+    const detailsContent = document.getElementById("detailsContent");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+
+    let activeId = null;
+
+    // Render cards
+    function renderCards() {
+      cardsContainer.innerHTML = "";
+      enquiries.forEach((e) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="channel">📢 ${e.channel}</div>
+          <p><strong>${e.message}</strong></p>
+          <p style="font-size:13px; color:${e.confidence > 0.75 ? "green" : "orange"};">
+            Confidence: ${(e.confidence * 100).toFixed(0)}%
+          </p>
+          <span class="status ${e.status}">${e.status.toUpperCase()}</span>
+        `;
+        card.onclick = () => showDetails(e.id);
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    // Show details
+    function showDetails(id) {
+      const e = enquiries.find((x) => x.id === id);
+      activeId = id;
+      detailsContent.innerHTML = `
+        <p><strong>Channel:</strong> ${e.channel}</p>
+        <p><strong>Message:</strong> ${e.message}</p>
+        <p><strong>Detected Product:</strong> ${e.product}</p>
+        <p><strong>Confidence:</strong> ${(e.confidence * 100).toFixed(0)}%</p>
+        <p><strong>Status:</strong> <span class="status ${e.status}">${e.status}</span></p>
+        ${
+          e.aiReply
+            ? `<p><strong>AI Reply Suggestion:</strong> ${e.aiReply}</p>`
+            : `<p style="color:var(--muted)">No AI suggestion available</p>`
+        }
+        <div style="margin-top:10px;">
+          <button class="btn btn-primary" onclick="autoReply(${id})" ${
+        !e.aiReply ? "disabled" : ""
+      }>Auto Reply</button>
+          <button class="btn btn-danger" onclick="openModal(${id})">Escalate</button>
+        </div>
+      `;
+    }
+
+    function autoReply(id) {
+      const e = enquiries.find((x) => x.id === id);
+      e.status = "resolved";
+      alert(`Auto reply sent: ${e.aiReply}`);
+      renderCards();
+      showDetails(id);
+    }
+
+    function openModal(id) {
+      const e = enquiries.find((x) => x.id === id);
+      document.getElementById("modalText").textContent = e.message;
+      modalBackdrop.style.display = "flex";
+    }
+
+    function closeModal() {
+      modalBackdrop.style.display = "none";
+    }
+
+    function confirmEscalation() {
+      const e = enquiries.find((x) => x.id === activeId);
+      e.status = "escalated";
+      e.notes = document.getElementById("notes").value;
+      closeModal();
+      renderCards();
+      showDetails(activeId);
+      alert("Enquiry escalated to human agent!");
+    }
+
+    renderCards();
+  </script>
+</body>
+</html>
