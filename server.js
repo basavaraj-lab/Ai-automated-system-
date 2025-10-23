@@ -19,11 +19,24 @@ app.post('/api/search', async (req, res) => {
     
     const { query } = req.body;
     
-    // Convert query to string and validate
-    const searchQuery = query ? String(query).trim() : '';
+    // Better validation and handling for query parameter
+    let searchQuery = '';
     
-    if (!searchQuery || searchQuery === '') {
-      return res.status(400).json({ error: 'Query is required' });
+    if (typeof query === 'string') {
+      searchQuery = query.trim();
+    } else if (query && typeof query === 'object') {
+      // Handle case where query is an object (common issue)
+      console.warn('⚠️ Query is an object, converting to string');
+      return res.status(400).json({ error: 'Invalid query format. Please send a string.' });
+    } else if (query) {
+      searchQuery = String(query).trim();
+    }
+    
+    if (!searchQuery || searchQuery === '' || searchQuery === '[object Object]') {
+      return res.status(400).json({ 
+        error: 'Valid product name is required',
+        example: 'Try searching for: iPhone, laptop, headphones, etc.'
+      });
     }
     
     console.log(`🔍 Searching for: "${searchQuery}"`);
@@ -94,7 +107,7 @@ function getSmartResults(query) {
           description: `Latest ${query} with cutting-edge features - Made for India`,
           availability: 'Prime Delivery - Pan India',
           category: 'Smartphones',
-          url: 'https://www.amazon.in',
+          url: `https://www.amazon.in/s?k=${encodeURIComponent(query)}`,
           seller: 'Amazon India'
         }
       ];
@@ -108,7 +121,7 @@ function getSmartResults(query) {
           description: `High-performance ${query} for Indian professionals and students`,
           availability: 'No Cost EMI Available',
           category: 'Laptops',
-          url: 'https://www.flipkart.com',
+          url: `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`,
           seller: 'Flipkart'
         }
       ];
@@ -123,7 +136,7 @@ function getSmartResults(query) {
         description: `${query} from trusted Indian retailers with warranty and easy returns`,
         availability: 'Pan India Delivery',
         category: 'General',
-        url: 'https://www.myntra.com',
+        url: `https://www.myntra.com/${encodeURIComponent(query)}`,
         seller: 'Myntra'
       }
     ];
@@ -132,26 +145,32 @@ function getSmartResults(query) {
 function generatePhoneResults(query) {
   return [
     {
-      title: `${query} - Latest Model`,
+      title: `${query} - Latest Model (128GB)`,
       platform: 'Amazon India',
       price: `₹${(Math.random() * 50000 + 30000).toFixed(0)}`,
-      description: `Brand new ${query} with cutting-edge technology and premium build quality - Available on Amazon India`,
-      availability: 'In Stock - Same Day Delivery',
+      description: `Brand new ${query} with cutting-edge A-series chip, advanced camera system, 128GB storage, and premium build quality. Includes 1-year manufacturer warranty and fast charging support.`,
+      availability: 'In Stock - Same Day Delivery Available',
       rating: `${(4.3 + Math.random() * 0.7).toFixed(1)}/5`,
+      reviews: `${Math.floor(Math.random() * 5000 + 1000)} reviews`,
       category: 'Smartphones',
-      url: 'https://www.amazon.in',
-      seller: 'Amazon India'
+      url: `https://www.amazon.in/s?k=${encodeURIComponent(query)}`,
+      seller: 'Amazon India',
+      features: ['128GB Storage', 'Dual Camera', 'Fast Charging', '5G Ready'],
+      warranty: '1 Year Manufacturer Warranty'
     },
     {
-      title: `${query} - Best Price`,
+      title: `${query} - Best Price Deal (256GB)`,
       platform: 'Flipkart',
       price: `₹${(Math.random() * 45000 + 25000).toFixed(0)}`,
-      description: `${query} with Flipkart Assured quality and fast delivery across India`,
-      availability: 'Flipkart Plus - Free Delivery',
+      description: `${query} with Flipkart Assured quality, 256GB storage, triple camera setup, and fast delivery across India. No Cost EMI available on all major credit cards.`,
+      availability: 'Limited Stock - Flipkart Plus Free Delivery',
       rating: `${(4.0 + Math.random() * 0.8).toFixed(1)}/5`,
+      reviews: `${Math.floor(Math.random() * 3000 + 500)} reviews`,
       category: 'Smartphones',
-      url: 'https://www.flipkart.com',
-      seller: 'Flipkart'
+      url: `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`,
+      seller: 'Flipkart',
+      features: ['256GB Storage', 'Triple Camera', 'No Cost EMI', 'Flipkart Assured'],
+      offers: ['10% Instant Discount', 'Exchange Up to ₹15,000']
     },
     {
       title: `${query} - Budget Option`,
@@ -161,7 +180,7 @@ function generatePhoneResults(query) {
       availability: 'Express Delivery Available',
       rating: `${(4.1 + Math.random() * 0.7).toFixed(1)}/5`,
       category: 'Smartphones',
-      url: 'https://www.myntra.com',
+      url: `https://www.myntra.com/${encodeURIComponent(query)}`,
       seller: 'Myntra'
     }
   ];
@@ -177,7 +196,7 @@ function generateLaptopResults(query) {
       availability: 'Available - Prime Delivery',
       rating: `${(4.4 + Math.random() * 0.6).toFixed(1)}/5`,
       category: 'Laptops',
-      url: 'https://www.amazon.in',
+      url: `https://www.amazon.in/s?k=${encodeURIComponent(query)}`,
       seller: 'Amazon India'
     },
     {
@@ -188,7 +207,7 @@ function generateLaptopResults(query) {
       availability: 'No Cost EMI Available',
       rating: `${(4.1 + Math.random() * 0.7).toFixed(1)}/5`,
       category: 'Laptops',
-      url: 'https://www.flipkart.com',
+      url: `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`,
       seller: 'Flipkart'
     },
     {
@@ -199,7 +218,7 @@ function generateLaptopResults(query) {
       availability: 'Store Pickup Available',
       rating: `${(4.3 + Math.random() * 0.6).toFixed(1)}/5`,
       category: 'Laptops',
-      url: 'https://www.croma.com',
+      url: `https://www.croma.com/search?q=${encodeURIComponent(query)}`,
       seller: 'Croma'
     }
   ];
@@ -215,7 +234,7 @@ function generateAudioResults(query) {
       availability: 'Prime Delivery Available',
       rating: `${(4.5 + Math.random() * 0.5).toFixed(1)}/5`,
       category: 'Audio',
-      url: 'https://www.amazon.in',
+      url: `https://www.amazon.in/s?k=${encodeURIComponent(query)}`,
       seller: 'Amazon India'
     },
     {
@@ -226,7 +245,7 @@ function generateAudioResults(query) {
       availability: 'SuperCoin Rewards Available',
       rating: `${(4.2 + Math.random() * 0.7).toFixed(1)}/5`,
       category: 'Audio',
-      url: 'https://www.flipkart.com',
+      url: `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`,
       seller: 'Flipkart'
     },
     {
@@ -237,7 +256,7 @@ function generateAudioResults(query) {
       availability: 'Cashback Available',
       rating: `${(4.0 + Math.random() * 0.8).toFixed(1)}/5`,
       category: 'Audio',
-      url: 'https://paytmmall.com',
+      url: `https://paytmmall.com/shop/search?q=${encodeURIComponent(query)}`,
       seller: 'Paytm Mall'
     }
   ];
@@ -253,7 +272,7 @@ function generateWatchResults(query) {
       availability: 'Best Seller - Prime Delivery',
       rating: `${(4.3 + Math.random() * 0.6).toFixed(1)}/5`,
       category: 'Wearables',
-      url: 'https://www.amazon.in',
+      url: `https://www.amazon.in/s?k=${encodeURIComponent(query)}`,
       seller: 'Amazon India'
     },
     {
@@ -264,7 +283,7 @@ function generateWatchResults(query) {
       availability: 'Exchange Offer Available',
       rating: `${(4.2 + Math.random() * 0.7).toFixed(1)}/5`,
       category: 'Wearables',
-      url: 'https://www.flipkart.com',
+      url: `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`,
       seller: 'Flipkart'
     }
   ];
@@ -280,7 +299,7 @@ function generateGeneralResults(query) {
       availability: 'Multiple Options Available',
       rating: `${(4.0 + Math.random()).toFixed(1)}/5`,
       category: 'General',
-      url: 'https://www.amazon.in',
+      url: `https://www.amazon.in/s?k=${encodeURIComponent(query)}`,
       seller: 'Amazon India'
     },
     {
@@ -291,7 +310,7 @@ function generateGeneralResults(query) {
       availability: 'COD Available',
       rating: `${(3.8 + Math.random()).toFixed(1)}/5`,
       category: 'General',
-      url: 'https://www.snapdeal.com',
+      url: `https://www.snapdeal.com/search?keyword=${encodeURIComponent(query)}`,
       seller: 'Snapdeal'
     }
   ];
@@ -299,12 +318,12 @@ function generateGeneralResults(query) {
 
 function generateUniversalResults(query) {
   const indianPlatforms = [
-    {name: 'Amazon India', url: 'https://www.amazon.in'},
-    {name: 'Flipkart', url: 'https://www.flipkart.com'},
-    {name: 'Myntra', url: 'https://www.myntra.com'},
-    {name: 'Paytm Mall', url: 'https://paytmmall.com'},
-    {name: 'Snapdeal', url: 'https://www.snapdeal.com'},
-    {name: 'Ajio', url: 'https://www.ajio.com'}
+    {name: 'Amazon India', url: `https://www.amazon.in/s?k=${encodeURIComponent(query)}`},
+    {name: 'Flipkart', url: `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`},
+    {name: 'Myntra', url: `https://www.myntra.com/${encodeURIComponent(query)}`},
+    {name: 'Paytm Mall', url: `https://paytmmall.com/shop/search?q=${encodeURIComponent(query)}`},
+    {name: 'Snapdeal', url: `https://www.snapdeal.com/search?keyword=${encodeURIComponent(query)}`},
+    {name: 'Ajio', url: `https://www.ajio.com/search/?text=${encodeURIComponent(query)}`}
   ];
   const platform = indianPlatforms[Math.floor(Math.random() * indianPlatforms.length)];
   

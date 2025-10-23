@@ -328,7 +328,7 @@ backBtn.addEventListener('click', () => {
   }
 });
 
-searchBtn.addEventListener('click', searchEnquiries);
+searchBtn.addEventListener('click', () => searchEnquiries());
 searchInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') searchEnquiries(); });
 </script>
 </body>
