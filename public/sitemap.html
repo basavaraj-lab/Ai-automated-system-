@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI System - Site Map</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .page-list { list-style: none; padding: 0; }
+        .page-list li { margin: 10px 0; }
+        .page-list a { 
+            display: inline-block; 
+            padding: 10px 15px; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+        }
+        .page-list a:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🚀 AI Automated Response System - Site Map</h1>
+    <p>Available pages in this deployment:</p>
+    
+    <ul class="page-list">
+        <li><a href="index.html">🔐 Login/Authentication</a></li>
+        <li><a href="dashBord.html">🏠 Dashboard</a></li>
+        <li><a href="enquiry.html">📋 Enquiry System</a></li>
+        <li><a href="socialMedia.html">📱 Social Media Hub</a></li>
+        <li><a href="liveEnquiries.html">🔴 Live Enquiries</a></li>
+        <li><a href="analyticsPage.html">📊 Analytics Dashboard</a></li>
+    </ul>
+    
+    <h3>🔧 Debugging Info:</h3>
+    <p><strong>Current URL:</strong> <span id="currentUrl"></span></p>
+    <p><strong>Base URL:</strong> <span id="baseUrl"></span></p>
+    <p><strong>Protocol:</strong> <span id="protocol"></span></p>
+    
+    <script>
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('baseUrl').textContent = window.location.origin;
+        document.getElementById('protocol').textContent = window.location.protocol;
+        
+        // Test each page
+        const pages = ['index.html', 'dashBord.html', 'enquiry.html', 'socialMedia.html', 'liveEnquiries.html', 'analyticsPage.html'];
+        
+        console.log('🔍 Testing page availability...');
+        pages.forEach(async (page) => {
+            try {
+                const response = await fetch(page, { method: 'HEAD' });
+                console.log(`✅ ${page}: ${response.status}`);
+            } catch (error) {
+                console.error(`❌ ${page}: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

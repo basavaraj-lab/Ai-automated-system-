@@ -36,6 +36,7 @@
 <body>
 
 <header>
+  <button id="backBtn">⬅ Back</button>
   <div id="searchContainer">
     <input type="text" id="searchInput" placeholder="Search by product, brand, or channel (or use voice 🎤)">
     <button id="voiceBtn" title="Voice Search (Browser + Server Fallback)">🎤</button>
@@ -76,22 +77,34 @@ let isRecording = false;
 let mediaRecorder;
 let audioChunks = [];
 
+// API Base URL - always points to local backend server
+const API_BASE = 'http://localhost:5001';
+let serverAvailable = false;
+
 // Check server status on page load
 async function checkServerStatus() {
   try {
-    const response = await fetch('http://localhost:5001/api/health');
+    const response = await fetch(`${API_BASE}/api/health`);
     const data = await response.json();
     console.log('✅ Server status:', data);
     serverAvailable = true;
     return true;
   } catch (error) {
     console.error('❌ Server not reachable:', error);
+    serverAvailable = false;
+    
+    // Show user-friendly message
     enquiryListDiv.innerHTML = `
-      <div style="color: red; padding: 20px; background: #fee2e2; border-radius: 8px; text-align: center;">
-        <h3>🚨 Server Connection Error</h3>
-        <p>Cannot connect to the server at localhost:5001</p>
-        <p>Please make sure the server is running:</p>
-        <code style="background: #f3f4f6; padding: 5px; border-radius: 4px;">node server.js</code>
+      <div style="color: #d97706; padding: 20px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; text-align: center; margin: 20px 0;">
+        <h3 style="color: #92400e; margin-top: 0;">🔧 Backend Server Required</h3>
+        <p style="margin: 10px 0; color: #451a03;">The AI backend server is not running.</p>
+        <div style="background: #f3f4f6; padding: 10px; border-radius: 6px; margin: 15px 0; font-family: monospace; color: #374151;">
+          <strong>To start the server:</strong><br>
+          1. Open terminal<br>
+          2. Navigate to project folder<br>
+          3. Run: <code style="background: #e5e7eb; padding: 2px 4px; border-radius: 3px;">node server.js</code>
+        </div>
+        <p style="font-size: 14px; color: #6b7280;">Once started, refresh this page to use all features!</p>
       </div>
     `;
     return false;
@@ -230,6 +243,12 @@ function stopRecording() {
 }
 
 async function processVoiceInput() {
+  // Check if server is available first
+  if (!serverAvailable) {
+    alert('Backend server required for voice search. Please start the server with: node server.js');
+    return;
+  }
+
   try {
     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
     const formData = new FormData();
@@ -238,7 +257,7 @@ async function processVoiceInput() {
     voiceBtn.textContent = '⏳';
     voiceBtn.title = 'Processing with Google Cloud...';
 
-    const response = await fetch('http://localhost:5001/api/speech-to-text', {
+    const response = await fetch(`${API_BASE}/api/speech-to-text`, {
       method: 'POST',
       body: formData
     });
@@ -284,6 +303,18 @@ window.addEventListener('DOMContentLoaded', checkServerStatus);
 async function searchEnquiries(customQuery = null) {
   const query = customQuery || searchInput.value.trim();
   if (!query) return alert("Please enter a product name to search.");
+
+  // Check if server is available first
+  if (!serverAvailable) {
+    enquiryListDiv.innerHTML = `
+      <div style="color: #d97706; padding: 20px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; text-align: center;">
+        <h3 style="color: #92400e;">🔧 Backend Server Required</h3>
+        <p>Please start the backend server to search for products.</p>
+        <p><code>node server.js</code></p>
+      </div>
+    `;
+    return;
+  }
 
   enquiryListDiv.innerHTML = `
     <div style="text-align: center; padding: 30px; color: #0077ff;">
@@ -606,9 +637,9 @@ async function fetchAnalytics() {
 async function fetchEnquiries(query='') {
   enquiryListDiv.innerHTML = 'Fetching details...';
   try {
-    const res = await fetch('http://localhost:5001/api/search', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+    const response = await fetch(`${API_BASE}/api/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query })
     });
     enquiries = await res.json();

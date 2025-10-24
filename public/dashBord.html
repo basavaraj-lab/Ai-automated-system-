@@ -21,6 +21,7 @@
       margin: 0;
       font-family: "Poppins", sans-serif;
       background: var(--bg);
+      background-color: whitesmoke;
       color: var(--text);
     }
 
@@ -287,9 +288,9 @@
       <div class="nav-item active">Dashboard</div>
       <!-- <div class="nav-item">Enquiries</div> -->
        <div class="nav-item" onclick="goToEnquiries()">Enquiries</div>
-      <div class="nav-item" onclick="window.location.href='liveEnquiries.html'">Live Enquiries</div>
-      <div class="nav-item" onclick="window.location.href='analyticsPage.html'">Analytics</div>
-      <div class="nav-item" onclick="window.location.href='socialMedia.html'">Social Media</div>
+      <div class="nav-item" onclick="window.location.href='/liveEnquiries.html'">Live Enquiries</div>
+      <div class="nav-item" onclick="window.location.href='/analyticsPage.html'">Analytics</div>
+      <div class="nav-item" onclick="window.location.href='/socialMedia.html'">Social Media</div>
     </div>
 
     <div class="main">
@@ -313,7 +314,14 @@
       function goToEnquiries() {
     // Save all enquiries to localStorage for use in enquiry.html
     localStorage.setItem('enquiries', JSON.stringify(enquiries));
-    window.location.href = 'enquiry.html';
+    console.log('🔍 Navigating to enquiry.html...');
+    
+    // Force navigation to enquiry page
+    const targetUrl = '/enquiry.html';
+    console.log('🎯 Navigating to:', targetUrl);
+    
+    // Use window.location.assign for better compatibility
+    window.location.assign(targetUrl);
   };
 
     const enquiries = [
